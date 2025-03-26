@@ -3,842 +3,290 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Payoneer-Style Dashboard</title>
-  <!-- Font Awesome (for icons) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"/>
+  <title>Payoneer Login (Two-Panel)</title>
+<!-- Google reCAPTCHA API -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <!-- Font Awesome for icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    referrerpolicy="no-referrer"
+  />
+
   <style>
     :root {
       --font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-      --bg-color: #f9f9f9;
-      --text-color: #111;
-      --card-bg: #fff;
-      --primary-color: #0055ff;
-      --brand-color-gray-700: #2e2e2e;
-      --transition-speed: 0.3s;
-      
-      /* Dropdown Specific */
-      --menu-bg: #fff;
-      --menu-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      --brand-blue: #0055ff;     /* Adjust to Payoneer's brand color if known */
+      --brand-black: #000;
+      --brand-red: #d00;
+      --text-color: #333;
+      --border-color: #ccc;
+      --error-bg: #fdeaea;
+      --error-text: #d00;
+      --input-focus: #0055ff;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: var(--font-family);
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    /* ---------------- Sidebar ---------------- */
-    .sidebar {
-      width: 250px;
-      background-color: var(--brand-color-gray-700);
-      border-right: 1px solid #444;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem 0;
-    }
-    .sidebar .brand {
-      display: flex;
-      margin-left: 10%;
-      align-items: center;
-      padding: 1rem 0; /* Added padding for extra space */
-      margin-bottom: 2rem;
-    }
-    .sidebar .brand img {
-      /* Change the logo source to your local path */
-      width: 119px;
-      height: 23px;
-      /* Example: src="/users/abdulquayyumoyedtun/Downloads/logo-dark/Payoneer_Master_Logo_OnDark_RGB.png" */
-    }
-    .sidebar .menu { list-style: none; padding: 0; margin: 0; }
-    .sidebar .menu li {
-      display: flex;
-      align-items: center;
-      padding: 1.1rem 1.9rem;
-      cursor: pointer;
-      transition: background-color var(--transition-speed), padding var(--transition-speed);
-      color: #fff;
-      font-size: 1rem;
-      border-radius: 8px;
-      margin-bottom: 0.8rem;
-      letter-spacing: 1px;
-    }
-    .sidebar .menu li i {
-      margin-right: 1.5rem;
-      width: 20px;
-      text-align: center;
-      color: #ccc;
-    }
-    .sidebar .menu li:last-child { margin-bottom: 0; }
-    .sidebar .menu li:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-      padding-left: 2.2rem;
-      width: 95%;
-    }
-    /* ---------------- Main Container ---------------- */
-    .main-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    /* ---------------- Top Nav ---------------- */
-    .top-nav {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.5rem;
-    }
-    .top-nav .left-section {
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: #000;
-    }
-    .top-nav .user-info {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      position: relative;
-    }
-    .top-nav .user-info i {
-      font-size: 1.2rem;
-      color: #666;
-      cursor: pointer;
-      transition: color var(--transition-speed);
-    }
-    .top-nav .user-info i:hover { color: var(--primary-color); }
-    .top-nav .user-details {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-    }
-    .top-nav .profile-circle {
-      width: 35px;
-      height: 35px;
-      border-radius: 50%;
-      background-color: var(--primary-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-    .top-nav .username {
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: #000;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-    /* ---------- User Details Dropdown ---------- */
-    .user-details-dropdown {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background-color: var(--menu-bg);
-      box-shadow: var(--menu-shadow);
-      border-radius: 8px;
-      width: 280px;
-      padding: 1rem;
-      transform: translateY(0.5rem);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity var(--transition-speed), visibility var(--transition-speed), transform var(--transition-speed);
-      z-index: 999;
-    }
-    .user-details-dropdown.active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-    .dropdown-header {
-      margin-bottom: 1rem;
-    }
-    .dropdown-header .display-name {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-    }
-    .dropdown-header .sub-info {
-      font-size: 0.85rem;
-      color: #555;
-      line-height: 1.4;
-    }
-    .dropdown-menu {
-      list-style: none;
+
+    * {
       margin: 0;
       padding: 0;
-      border-top: 1px solid #eee;
-      padding-top: 1rem;
+      box-sizing: border-box;
+      font-family: var(--font-family);
     }
-    .dropdown-menu li {
+
+    body, html {
+      height: 100%;
+      background-color: #fff; /* White background behind everything */
+    }
+
+    /* ========== Container: Two Panels ========== */
+    .container {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.6rem 0;
-      cursor: pointer;
-      font-size: 0.9rem;
-      color: #333;
-      transition: background-color var(--transition-speed);
+      height: 100vh; /* Full viewport height */
     }
-    .dropdown-menu li i {
-      font-size: 1rem;
-      color: #666;
-      width: 20px;
-      text-align: center;
-    }
-    .dropdown-menu li:hover {
-      background-color: #f9f9f9;
-      border-radius: 4px;
-    }
-    /* ---------------- Content Wrapper ---------------- */
-    .content-wrapper {
-      flex: 1;
+
+    /* Left panel (login) */
+    .left-panel {
+      width: 100%;
+      max-width: 360px; /* Approx width from the screenshot */
+      background-color: #fff; 
       display: flex;
       flex-direction: column;
-      padding: 1.5rem 2rem;
-    }
-    .content-wrapper h1 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: #111;
-    }
-    .balances-inline {
-      margin-top: 5%;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      padding: 2.2rem 1.2rem;
+      /* Add a box shadow on the right side */
+      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 2;
     }
-    .balances-inline .balances-title {
-      font-size: 1.3rem;
-      font-weight: 400;
-      color: #666;
+
+    /* Right panel (background image) */
+    .right-panel {
+      flex: 1;
+      background-image: url('IMG_9135.JPG');
+      background-size: cover;
+      background-position: center;
     }
-    .balances-inline .total-funds {
-      font-size: 1rem;
-      font-weight: 400;
-      color: #666;
-    }
-    .balances-cards {
+
+    /* ========== Login Form Elements ========== */
+    .login-container {
+      width: 100%;
+      max-width: 340px;
       display: flex;
-      gap: 1rem;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Logo at the top */
+    .logo {
+      width: 150px; 
       margin-bottom: 2rem;
     }
-    .balance-card {
-      flex: 1;
-      background-color: var(--card-bg);
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-      display: flex;
-      align-items: center;
-      padding: 2rem;
-      gap: 1rem;
-      transition: transform 0.3s;
-      cursor: pointer;
-      min-width: 320px;
-    }
-    .balance-card:hover { transform: translateY(-3px); }
-    .balance-card .flag {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .balance-card .flag img { width: 100%; height: 100%; object-fit: cover; }
-    .balance-card .balance-info { display: flex; flex-direction: column; }
-    .balance-card .currency {
-      font-weight: 500;
-      font-size: 1.2rem;
-      letter-spacing: 1.5px;
-      color: #444;
-    }
-    /* ---------------- Transactions Section ---------------- */
-    .transactions-section {
-      background-color: var(--card-bg);
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      padding: 1rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .title { font-size: 1.3rem; color: #000; margin-bottom: 0.3rem; }
-    .refresh-info { font-size: 1rem; font-weight: 300; color: #666; margin-top: 0.3rem; }
-    .tabs {
-      display: flex;
-      gap: 1rem;
-      border-bottom: 1px solid #eee;
-      margin-bottom: 1rem;
-    }
-    .tab {
-      padding: 0.5rem;
-      cursor: pointer;
-      font-size: 0.9rem;
-      color: #666;
-      transition: color var(--transition-speed);
-    }
-    .tab:hover { color: var(--primary-color); }
-    .tab.active {
-      font-weight: 600;
-      color: var(--primary-color);
-      border-bottom: 2px solid var(--primary-color);
-    }
-    .tab-content {
-      font-size: 0.9rem;
-      color: #777;
-      display: none;
-      flex: 1;
-      overflow-y: auto;
-    }
-    .tab-content.active { display: block; }
-    .no-transactions {
-      margin: 2rem 0;
-      font-size: 1.2rem;
-      color: #999;
-      text-align: center;
-    }
-    /* ---------------- Transaction Items ---------------- */
-    .transaction-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-      transition: background-color var(--transition-speed);
-    }
-    .transaction-item:hover { background-color: #f1f1f1; }
-    .transaction-item .transaction-date {
-      flex: 1;
-      min-width: 50px;
-      color: #555;
-      font-weight: 500;
-    }
-    .transaction-item .transaction-detail {
-      flex: 2;
-      min-width: 200px;
-    }
-    .transaction-item .transaction-status {
-      flex: 1;
-      text-align: right;
-      font-weight: 600;
-      color: #008000;
-    }
-    /* ---------------- Transaction Details Panel ---------------- */
-    .transaction-details-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 350px;
-      max-width: 100%;
-      height: 100%;
-      background-color: #fff;
-      box-shadow: -2px 0 8px rgba(0,0,0,0.15);
-      transform: translateX(100%);
-      transition: transform var(--transition-speed);
-      z-index: 100;
-      overflow-y: auto;
-    }
-    .transaction-details-panel.active {
-      transform: translateX(0);
-    }
-    /* -------------- DETAILS PANEL DESIGN -------------- */
-    .details-header {
-      background-color: #007bff;
-      color: #fff;
-      text-align: center;
-      padding: 3rem 1rem;
-      position: relative;
-    }
-    .icon-circle {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background-color: #fff;
-      color: #007bff;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-    }
-    .payment-title {
+
+    /* Labels and inputs */
+    label {
       display: block;
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-top: 0.5rem;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+      color: var(--brand-black);
     }
-    .details-middle {
-      text-align: center;
-      padding: 1.5rem;
-    }
-    .details-middle .transaction-date {
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.5rem;
       font-size: 1rem;
-      color: #666;
-      margin-bottom: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      outline: none;
     }
-    .details-middle .transaction-amount {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #111;
-      margin-bottom: 0.5rem;
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--input-focus);
     }
-    .details-middle .transaction-status {
-      font-size: 1rem;
-      color: #666;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+
+    /* Field spacing */
+    .form-group {
+      width: 100%;
+      margin-bottom: 1.2rem;
     }
-    .details-middle .transaction-status.canceled i {
-      color: #dc3545;
-      margin-left: 0.5rem;
+
+    /* Forgot password link */
+    .forgot-password {
+      display: inline-block;
+      margin-top: 0.3rem;
+      font-size: 0.85rem;
+      color: var(--brand-blue);
+      text-decoration: none;
     }
-    .details-bottom {
-      text-align: center;
-      padding: 1.5rem;
+    .forgot-password:hover {
+      text-decoration: underline;
     }
-    .details-toggle {
-      display: inline-flex;
+
+    /* Error Message (hidden by default) */
+    .error-message {
+      display: none; /* Hidden initially */
+      width: 100%;
+      background-color: var(--error-bg);
+      color: var(--error-text);
+      font-size: 0.9rem;
+      border-left: 3px solid var(--error-text);
+      padding: 0.8rem 1rem;
+      border-radius: 3px;
       align-items: center;
       gap: 0.5rem;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.2rem;
     }
-    .details-toggle i {
-      transition: transform 0.3s ease;
+    .error-message i {
+      color: var(--error-text);
     }
-    .details-toggle.open i { transform: rotate(180deg); }
-    .details-content-body {
-      display: block;
-      animation: fadeIn 0.3s forwards;
-      text-align: left;
-      margin-top: 1rem;
-    }
-    .details-content-body p {
+
+    /* Sign In button */
+    .btn-signin {
+      width: 100%;
+      padding: 0.7rem;
       font-size: 1rem;
-      color: #333;
-      margin-bottom: 1rem;
-      line-height: 1.5;
+      background-color: var(--brand-blue);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-bottom: 1.2rem;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .btn-signin:hover {
+      background-color: #0040cc; /* Slightly darker on hover */
     }
-    /* ---------------- Responsive ---------------- */
-    @media (max-width: 900px) {
-      .transaction-details-panel { width: 100%; }
+
+    /* "New to Payoneer? Sign up!" */
+    .signup {
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .signup a {
+      color: var(--brand-blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .signup a:hover {
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    .footer {
+      font-size: 0.8rem;
+      color: #666;
+      text-align: center;
+      margin-top: auto;
+    }
+    .footer a {
+      color: var(--brand-blue);
+      margin: 0 0.4rem;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* ========== Loading Spinner Overlay ========== */
+    .spinner-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999; /* Above everything */
+      display: none; /* Hidden initially */
+    }
+    .spinner-overlay .spinner {
+      font-size: 2rem;
+      color: var(--brand-blue);
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="brand">
-      <!-- Change the logo back to your local path -->
-      <img src="Payoneer_Master_Logo_OnDark_RGB.png" alt="Payoneer Logo" />
-    </div>
-    <ul class="menu">
-      <li><i class="fa-solid fa-home"></i> Home</li>
-      <li><i class="fa-solid fa-chart-line"></i> Account activity</li>
-      <li><i class="fa-solid fa-university"></i> Bank accounts</li>
-      <li><i class="fa-solid fa-network-wired"></i> Business network</li>
-    </ul>
-  </aside>
+  <div class="container">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="login-container" style="padding: 10px;">
+        <!-- Logo -->
+        <img 
+          src="Payoneer_Master_Logo_OnWhite_RGB.png" 
+          alt="Payoneer Logo"
+          class="logo"
+        />
+<br>
+<br>
+        <!-- Email or Username -->
+        <div class="form-group">
+          <label for="email">Email or username</label>
+          <input type="text" id="email" value="oyedotun2" />
+        </div>
 
-  <!-- Main Container -->
-  <div class="main-container">
-    <!-- Top Nav -->
-    <div class="top-nav">
-      <div class="left-section"></div>
-      <div class="user-info" id="userInfo">
-        <i class="fa-solid fa-question-circle"></i>
-        <i class="fa-solid fa-bell"></i>
-        <div class="user-details">
-          <div class="profile-circle">RM</div>
-          <span class="username">
-            Rene Morales
-            <i class="fa-solid fa-caret-down"></i>
-          </span>
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" value="**********" />
+          <a href="#" class="forgot-password">Forgot password?</a>
         </div>
-        <!-- User Details Dropdown -->
-        <div class="user-details-dropdown" id="userDetailsDropdown">
-          <div class="dropdown-header">
-            <div class="display-name">RENE MORALES</div>
-            <div class="sub-info">Customer ID: 48193948</div>
-            <div class="sub-info" id="lastSignIn">
-              Last sign in: ...
-            </div>
-          </div>
-          <ul class="dropdown-menu">
-            <li><i class="fa-solid fa-gear"></i> Settings</li>
-            <li><i class="fa-solid fa-circle-question"></i> Support Center</li>
-            <li><i class="fa-solid fa-right-from-bracket"></i> Sign out</li>
-          </ul>
-        </div>
-      </div>
-    </div>
 
-    <!-- Content Wrapper -->
-    <div class="content-wrapper">
-      <h1>Home</h1>
-      <div class="balances-inline">
-        <div class="balances-title">Balances</div>
-        <div class="total-funds">
-          Total funds in all balances:
-          <span style="color: #000; font-weight: 500;">912.32 USD</span>
-        </div>
-      </div>
-      <div class="balances-cards">
-        <div class="balance-card">
-          <div class="flag">
-            <img src="https://flagcdn.com/us.svg" alt="USD Flag" />
+        <!-- Error Message (initially hidden) -->
+        <div class="error-message" id="errorMsg">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Your account was closed as some of your activity has gone against our Terms and Conditions. <a href="">Learn more</a>
           </div>
-          <div class="balance-info">
-            <span class="currency">912.32 USD</span>
+          
+          <div class="recaptcha-container">
+            <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
           </div>
-        </div>
-        <div class="balance-card">
-          <div class="flag">
-            <img src="https://flagcdn.com/eu.svg" alt="EUR Flag" />
-          </div>
-          <div class="balance-info">
-            <span class="currency">0.00 EUR</span>
-          </div>
-        </div>
-        <div class="balance-card">
-          <div class="flag">
-            <img src="https://flagcdn.com/gb.svg" alt="GBP Flag" />
-          </div>
-          <div class="balance-info">
-            <span class="currency">0.00 GBP</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Transactions Section -->
-      <div class="transactions-section">
-        <div class="title">Transactions</div>
-        <div class="refresh-info">Updated every several minutes</div>
-        <div class="tabs">
-          <div class="tab active" data-target="#latest">Latest</div>
-          <div class="tab" data-target="#upcoming">Upcoming</div>
-          <a href="#" style="margin-left:auto;font-size:0.85rem;color:#555;">View ></a>
+        <!-- Sign In Button -->
+        <button class="btn-signin" id="signInBtn">Sign in</button>
+
+        <!-- "New to Payoneer? Sign up!" -->
+        <div class="signup">
+          New to Payoneer? <a href="#">Sign up!</a>
         </div>
-        <!-- Latest Tab Content -->
-        <div id="latest" class="tab-content active">
-          <!-- Transaction 1: Changed to Thomas W Kaiser -->
-          <div class="transaction-item" data-transaction-id="1" onclick="showTransactionDetails('1')">
-            <div class="transaction-date">25 Mar 2025</div>
-            <div class="transaction-detail">Payment from THOMAS W KAISER XX214424</div>
-            <div class="transaction-status" style="color: #444;">Canceled</div>
-          </div>
-          <!-- Transaction 2: Brian -->
-          <div class="transaction-item" data-transaction-id="2" onclick="showTransactionDetails('2')">
-            <div class="transaction-date">25 Mar 2025</div>
-            <div class="transaction-detail">Payment from BRIAN POSTLER XX214424</div>
-            <div class="transaction-status" style="color: #444;">Canceled</div>
-          </div>
-          <!-- Transaction 3: Joseph D -->
-          <div class="transaction-item" data-transaction-id="3" onclick="showTransactionDetails('3')">
-            <div class="transaction-date">12 Mar 2025</div>
-            <div class="transaction-detail">Payment from Joseph D: XX139852</div>
-            <div class="transaction-status">Completed</div>
-          </div>
-          <!-- Transaction 4: PURCHASE AUTHORIZATION UBER TECHNOLOGIES I... -->
-          <div class="transaction-item" data-transaction-id="4" onclick="showTransactionDetails('4')">
-            <div class="transaction-date">10 Mar 2025</div>
-            <div class="transaction-detail">PURCHASE AUTHORIZATION UBER TECHNOLOGIES I...</div>
-            <div class="transaction-status">Completed</div>
-          </div>
-          <!-- Transaction 5: PAYPAL -$1.49 -->
-          <div class="transaction-item" data-transaction-id="5" onclick="showTransactionDetails('5')">
-            <div class="transaction-date">09 Mar 2025</div>
-            <div class="transaction-detail">PAYPAL</div>
-            <div class="transaction-status">Completed</div>
-          </div>
-          <!-- Transaction 6: PAYPAL -$4.49 -->
-          <div class="transaction-item" data-transaction-id="6" onclick="showTransactionDetails('6')">
-            <div class="transaction-date">08 Mar 2025</div>
-            <div class="transaction-detail">PAYPAL</div>
-            <div class="transaction-status">Completed</div>
-          </div>
-        </div>
-        <!-- Upcoming Tab Content -->
-        <div id="upcoming" class="tab-content">
-          <div class="no-transactions">Nothing to see here right now</div>
+
+        <!-- Footer -->
+        <div class="footer" style="margin-top: 160%;">
+          © 2005-2025 Payoneer Inc. |
+          <a href="#">Contact Us</a> |
+          <a href="#">English</a>
         </div>
       </div>
     </div>
+
+    <!-- Right Panel (background image) -->
+    <div class="right-panel"></div>
   </div>
 
-  <!-- Transaction Details Panel (Closes when background tapped) -->
-  <div class="transaction-details-panel" id="transactionDetailsPanel">
-    <!-- Transaction 1 Details: Thomas W Kaiser -->
-    <div class="details-content" data-transaction-id="1" style="display: none;">
-      <div class="details-header">
-        <div class="icon-circle">
-          <i class="fa-solid fa-globe"></i>
-        </div>
-        <span class="payment-title">Payment from THOMAS W KAISER XX214424</span>
-      </div>
-      <div class="details-middle">
-        <div class="transaction-date">25 Mar 2025</div>
-        <div class="transaction-amount">$32,000</div>
-        <div class="transaction-status canceled">Canceled </div>
-      </div>
-      <div class="details-bottom">
-        <div class="details-toggle" onclick="toggleDetails(this)">
-          <span>Transaction details</span>
-          <i class="fa-solid fa-chevron-down"></i>
-        </div>
-        <div class="details-content-body">
-          <p><strong>Transaction ID:</strong> 108743568</p>
-          <p><strong>To:</strong> RENE MORALES</p>
-          <p><strong>Date:</strong> 25 Mar 2025</p>
-          <p><strong>Amount:</strong> $32,000</p>
-          <p><strong>Status:</strong> Canceled</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transaction 2 Details: Brian -->
-    <div class="details-content" data-transaction-id="2" style="display: none;">
-      <div class="details-header">
-        <div class="icon-circle">
-          <i class="fa-solid fa-globe"></i>
-        </div>
-        <span class="payment-title">Payment from BRIAN POSTLER XX214424</span>
-      </div>
-      <div class="details-middle">
-        <div class="transaction-date">25 Mar 2025</div>
-        <div class="transaction-amount">$12,000</div>
-        <div class="transaction-status canceled">Canceled </i></div>
-      </div>
-      <div class="details-bottom">
-        <div class="details-toggle" onclick="toggleDetails(this)">
-          <span>Transaction details</span>
-          <i class="fa-solid fa-chevron-down"></i>
-        </div>
-        <div class="details-content-body">
-          <p><strong>Transaction ID:</strong> 2</p>
-          <p><strong>To:</strong>RENE MORALES</p>
-          <p><strong>Date:</strong> 25 Mar 2025</p>
-          <p><strong>Amount:</strong> $12,000</p>
-          <p><strong>Status:</strong> Canceled</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transaction 3 Details: Joseph D -->
-    <div class="details-content" data-transaction-id="3" style="display: none;">
-      <div class="details-header">
-        <div class="icon-circle">
-          <i class="fa-solid fa-globe"></i>
-        </div>
-        <span class="payment-title">Payment from Joseph D: XX139852</span>
-      </div>
-      <div class="details-middle">
-        <div class="transaction-date">12 Mar 2025</div>
-        <div class="transaction-amount">$900</div>
-        <div class="transaction-status">Completed</div>
-      </div>
-      <div class="details-bottom">
-        <div class="details-toggle" onclick="toggleDetails(this)">
-          <span>Transaction details</span>
-          <i class="fa-solid fa-chevron-down"></i>
-        </div>
-        <div class="details-content-body">
-          <p><strong>Transaction ID:</strong> 3</p>
-          <p><strong>To:</strong>RENE MORALES</p>
-          <p><strong>Date:</strong> 12 Mar 2025</p>
-          <p><strong>Amount:</strong> $900</p>
-          <p><strong>Status:</strong> Completed</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transaction 4 Details: PURCHASE AUTHORIZATION UBER TECHNOLOGIES I... -->
-    <div class="details-content" data-transaction-id="4" style="display: none;">
-      <div class="details-header">
-        <div class="icon-circle">
-          <i class="fa-solid fa-globe"></i>
-        </div>
-        <span class="payment-title">PURCHASE AUTHORIZATION UBER TECHNOLOGIES I...</span>
-      </div>
-      <div class="details-middle">
-        <div class="transaction-date">10 Mar 2025</div>
-        <div class="transaction-amount">-$0.00</div>
-        <div class="transaction-status">Completed</div>
-      </div>
-      <div class="details-bottom">
-        <div class="details-toggle" onclick="toggleDetails(this)">
-          <span>Transaction details</span>
-          <i class="fa-solid fa-chevron-down"></i>
-        </div>
-        <div class="details-content-body">
-          <p><strong>Transaction ID:</strong> 437773256</p>
-          <p><strong>To:</strong>UBER </p>
-          <p><strong>Date:</strong> 10 Mar 2025</p>
-          <p><strong>Amount:</strong> -$0.00</p>
-          <p><strong>Status:</strong> Completed</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transaction 5 Details: PAYPAL -$1.49 -->
-    <div class="details-content" data-transaction-id="5" style="display: none;">
-      <div class="details-header">
-        <div class="icon-circle">
-          <i class="fa-solid fa-globe"></i>
-        </div>
-        <span class="payment-title">PAYPAL</span>
-      </div>
-      <div class="details-middle">
-        <div class="transaction-date">09 Mar 2025</div>
-        <div class="transaction-amount">-$1.49</div>
-        <div class="transaction-status">Completed</div>
-      </div>
-      <div class="details-bottom">
-        <div class="details-toggle" onclick="toggleDetails(this)">
-          <span>Transaction details</span>
-          <i class="fa-solid fa-chevron-down"></i>
-        </div>
-        <div class="details-content-body">
-          <p><strong>Transaction ID:</strong> 875222498</p>
-          <p><strong>To:</strong> PAYPAL</p>
-          <p><strong>Date:</strong> 09 Mar 2025</p>
-          <p><strong>Amount:</strong> -$1.49</p>
-          <p><strong>Status:</strong> Completed</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transaction 6 Details: PAYPAL -$4.49 -->
-    <div class="details-content" data-transaction-id="6" style="display: none;">
-      <div class="details-header">
-        <div class="icon-circle">
-          <i class="fa-solid fa-globe"></i>
-        </div>
-        <span class="payment-title">PAYPAL</span>
-      </div>
-      <div class="details-middle">
-        <div class="transaction-date">08 Mar 2025</div>
-        <div class="transaction-amount">-$4.49</div>
-        <div class="transaction-status">Completed</div>
-      </div>
-      <div class="details-bottom">
-        <div class="details-toggle" onclick="toggleDetails(this)">
-          <span>Transaction details</span>
-          <i class="fa-solid fa-chevron-down"></i>
-        </div>
-        <div class="details-content-body">
-          <p><strong>Transaction ID:</strong> 6</p>
-          <p><strong>To:</strong> PAYPAL</p>
-          <p><strong>Date:</strong> 08 Mar 2025</p>
-          <p><strong>Amount:</strong> -$4.49</p>
-          <p><strong>Status:</strong> Completed</p>
-        </div>
-      </div>
+  <!-- Spinner Overlay -->
+  <div class="spinner-overlay" id="spinnerOverlay">
+    <div class="spinner">
+      <i class="fa-solid fa-spinner fa-spin"></i>
     </div>
   </div>
 
   <script>
-    // Tab switching for Latest / Upcoming
-    const tabs = document.querySelectorAll('.tab');
-    const contents = document.querySelectorAll('.tab-content');
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        tabs.forEach((t) => t.classList.remove('active'));
-        contents.forEach((c) => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.querySelector(tab.getAttribute('data-target')).classList.add('active');
-      });
-    });
+    const signInBtn = document.getElementById('signInBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const spinnerOverlay = document.getElementById('spinnerOverlay');
 
-    // Show details for the clicked transaction and slide in the panel
-    function showTransactionDetails(txId) {
-      document.querySelectorAll('.transaction-details-panel .details-content').forEach((detail) => {
-        detail.style.display = 'none';
-      });
-      const detailToShow = document.querySelector(`.transaction-details-panel .details-content[data-transaction-id="${txId}"]`);
-      if (detailToShow) { detailToShow.style.display = 'block'; }
-      document.getElementById('transactionDetailsPanel').classList.add('active');
-    }
+    signInBtn.addEventListener('click', function() {
+      // 1. Hide error message (in case it was shown previously)
+      errorMsg.style.display = 'none';
 
-    // Close panel if clicking outside of details-content or on panel background, except if clicking a transaction item
-    document.addEventListener('click', function(e) {
-      if (e.target.closest('.transaction-item')) return;
-      const panel = document.getElementById('transactionDetailsPanel');
-      if (panel.classList.contains('active') && !panel.contains(e.target)) {
-        closeDetailsPanel();
-      }
-    });
-    function closeDetailsPanel() {
-      document.getElementById('transactionDetailsPanel').classList.remove('active');
-    }
+      // 2. Show the loading spinner
+      spinnerOverlay.style.display = 'flex';
 
-    // Toggle the dropdown for transaction details
-    function toggleDetails(toggleElement) {
-      const icon = toggleElement.querySelector('i');
-      icon.classList.toggle('open');
-      const detailsBody = toggleElement.parentElement.querySelector('.details-content-body');
-      if (detailsBody.style.display === 'block') {
-        detailsBody.style.display = 'none';
-      } else {
-        detailsBody.style.display = 'block';
-      }
-      toggleElement.classList.toggle('open');
-    }
-
-    // --------------------- User Details Dropdown Logic ---------------------
-    const userInfo = document.getElementById("userInfo");
-    const userDetailsDropdown = document.getElementById("userDetailsDropdown");
-    const lastSignInElem = document.getElementById("lastSignIn");
-
-    // Toggle user details dropdown on user-info click (but not when clicking on icons)
-    userInfo.addEventListener("click", (e) => {
-      if (e.target.closest(".fa-question-circle") || e.target.closest(".fa-bell")) return;
-      e.stopPropagation();
-      userDetailsDropdown.classList.toggle("active");
-    });
-
-    // Hide dropdown if clicking outside
-    document.addEventListener("click", (e) => {
-      if (!userInfo.contains(e.target) && !userDetailsDropdown.contains(e.target)) {
-        userDetailsDropdown.classList.remove("active");
-      }
-    });
-
-    // Format last sign in time: 2 minutes ago in EST
-    function formatLastSignIn() {
-      const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000);
-      const options = {
-        timeZone: "America/New_York",
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      };
-      const formatted = twoMinAgo.toLocaleString("en-US", options);
-      const parts = formatted.split(", ");
-      if (parts.length === 3) {
-        const [monthDay, year, time] = parts;
-        return `${monthDay} ${year} ${time} EST`;
-      }
-      return formatted + " EST";
-    }
-    window.addEventListener("DOMContentLoaded", () => {
-      lastSignInElem.textContent = "Last sign in: " + formatLastSignIn();
+      // 3. Simulate a network request (2 seconds). Adjust as needed.
+      setTimeout(() => {
+        // Hide the spinner
+        spinnerOverlay.style.display = 'none';
+        // Show the error message
+        errorMsg.style.display = 'flex';
+      }, 2000);
     });
   </script>
 </body>
